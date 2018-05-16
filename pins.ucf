@@ -1,0 +1,8 @@
+// General
+NET "CLK_50MHZ" LOC = "C9";
+
+// MIDI input on IP35 (input-only pin on FX2-BB)
+NET "MIDI_IN" LOC = "D12"; 
+
+// DAC output
+// TODO
