@@ -208,8 +208,8 @@ module MIDIParse(
 				end
 				read_state <= 0; // Wait for next command
 			end
-			3: read_state <= read_state + 1; // Skip 2 bytes
-			4: read_state <= read_state + 1; // Skip 1 byte
+			3: read_state <= read_state + 1; // Skip 2 bytes (this and the next one)
+			4: read_state <= 0; // Skip 1 byte (only this byte)
 		endcase
 	end
 	
