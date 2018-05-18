@@ -19,7 +19,17 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module main(
+		input CLK_50MHZ,
+		input MIDI_IN,
+		output DBG_LED
     );
 
+	wire[7:0] midi_byte;   // 8-bit MIDI byte
+	wire midi_ready;       // MIDI byte successfully received
+	wire[23:0] midi_freq;  // 24bit frequency * 1000
+	wire[6:0] midi_vel;    // 0-127
+	wire midi_play;        // Is MIDI playback active?
+	MIDIIn midi(CLK_50MHZ, MIDI_IN, midi_byte, midi_ready);
+	MIDIParse parser(midi_byte, midi_ready, midi_freq, midi_vel, midi_play);
 
 endmodule

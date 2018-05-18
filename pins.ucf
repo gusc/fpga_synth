@@ -6,3 +6,6 @@ NET "MIDI_IN" LOC = "D12";
 
 // DAC output
 // TODO
+
+// Debug LED
+NET "DBG_LED" LOC = "F12";
