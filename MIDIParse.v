@@ -27,43 +27,44 @@ module MIDIParse(
 		output out_play
     );
 
-	reg[7:0] byte_input = 0; // Local copy of MIDI byte
 	reg[3:0] read_state = 0; // command, note, velocity, reserved steps to skip all other MIDI commands
 	reg[0:0] note_off = 0;	 // This is a note-off message
 	// Output is 24 bit integer, because highest frequency is 4186Hz * 1000
 	reg[23:0] frequency = 0;
 	reg[6:0] velocity = 0;
-	reg[0:0] playing = 0;
+	reg playing = 0;
 	
 	always @(posedge midi_ready) begin
-		byte_input = midi_byte;
 		case (read_state)
 			0: // Read MIDI command
 			begin
-				if (byte_input & 'hF0 == 8'b10010000) begin
+				if (midi_byte & 'hF0 == 8'b10010000) begin
 					// Note-on message (all channel)
 					note_off <= 0;
 					read_state <= read_state + 1;
 				end
-				else if (byte_input & 'hF0 == 8'b10000000) begin
+				else if (midi_byte & 'hF0 == 8'b10000000) begin
 					// Note-off message (all channels)
 					note_off <= 1;
 					read_state <= read_state + 1;
 				end
-				else if (byte_input & 'hF0 == 8'b11000000
-						|| byte_input & 'hF0 == 8'b11010000) begin
-					// Program change and Channel pressure messages have single byte data
+				else if (midi_byte & 'hF0 == 8'b11000000
+						|| midi_byte & 'hF0 == 8'b11010000) begin
+					// Program change and Channel pressure messages have 
+					// single byte data.
 					read_state <= 4;
 				end
 				else begin
 					// Rest of standard commands have 2 bytes following
+					// except for SysEx messages, be let's hope nobody sends
+					// them to us.
 					read_state <= 3;
 				end
 			end
 			1: // Read Note number
 			begin
 				// Note frequency lookup table
-				case (byte_input)
+				case (midi_byte)
 					0: frequency<=8175;
 					1: frequency<=8661;
 					2: frequency<=9177;
@@ -197,13 +198,13 @@ module MIDIParse(
 			end
 			2: // Read velocity
 			begin
-				if (byte_input == 0 || note_off == 1) begin
-					// Velocity is 0 or note-off received
+				if (midi_byte == 0 || note_off == 1) begin
+					// 0-velocity note press or note-off message received
 					velocity <= 0;
 					playing <= 0;
 				end
 				else begin
-					velocity <= byte_input[6:0];
+					velocity <= midi_byte[6:0];
 					playing <= 1;
 				end
 				read_state <= 0; // Wait for next command
