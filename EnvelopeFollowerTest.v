@@ -29,7 +29,7 @@ module EnvelopeFollowerTest;
 	reg [11:0] inSample;
 	reg inSampleReady;
 	reg inIsPlaying;
-	reg [11:0] velocity;
+	reg [11:0] inVelocity;
 
 	// Outputs
 	wire [11:0] outSample;
@@ -39,11 +39,11 @@ module EnvelopeFollowerTest;
 		.inSample(inSample), 
 		.inSampleReady(inSampleReady), 
 		.inIsPlaying(inIsPlaying), 
-		.velocity(velocity),
+		.inVelocity(inVelocity),
 		.outSample(outSample)
 	);
 	// Initialize Inputs
-	initial velocity = 12'hFF;
+	initial inVelocity = 12'hFF;
 	initial inSample = 12'hAFF;
 	initial inSampleReady = 0;
 	initial inIsPlaying = 1;

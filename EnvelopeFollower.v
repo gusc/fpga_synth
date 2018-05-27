@@ -23,7 +23,7 @@ module EnvelopeFollower(
 	input [11:0] inSample,
 	input inSampleReady,
 	input inIsPlaying,
-	input [11:0] velocity,
+	input [11:0] inVelocity,
 	output [11:0] outSample
 );
 	// flag for enabling next sample
@@ -49,14 +49,14 @@ module EnvelopeFollower(
 	
 	AddOperation calcNextStartSample (
 		.lhs(currentSample), 
-		.rhs(velocity), 
+		.rhs(inVelocity), 
 		.result(nextStartSample), 
 		.overflow(nextStartOverflow)
 	);
 	
 	SubtractOperation calcNextEndSample (
 		.lhs(currentSample), 
-		.rhs(velocity), 
+		.rhs(inVelocity), 
 		.result(nextEndSample), 
 		.overflow(nextEndOverflow)
 	);
