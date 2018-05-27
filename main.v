@@ -24,21 +24,33 @@ module main(
 		output DBG_LED
     );
 
-	wire[7:0] midi_byte;   // 8-bit MIDI byte
-	wire midi_ready;       // MIDI byte successfully received
-	wire[23:0] midi_freq;  // 24bit frequency * 1000
-	wire[6:0] midi_vel;    // 0-127
-	wire midi_play;        // Is MIDI playback active?
-	MIDIIn midi(CLK_50MHZ, MIDI_IN, midi_byte, midi_ready);
-	MIDIParse parser(midi_byte, midi_ready, midi_freq, midi_vel, midi_play);
-
-	
+	// MIDI INPUT
+	wire[7:0] midiByte;   			// 8-bit MIDI byte
+	wire midiReady;       			// MIDI byte successfully received
+	MIDIIn midi(
+		.clock(CLK_50MHZ),
+		.uartStream(MIDI_IN),
+		.byteOutput(midiByte),
+		.byteOutputReady(midiReady)
+	);
+		
+	// MIDI PARSER
+	wire[23:0] sampleFrequency;  	// 24bit frequency * 1000
+	wire[6:0] sampleVelocity;    	// 0-127
+	wire samplePlaying;        		// Is MIDI playback active?
+	MIDIParse parser(
+		.midiByte(midiByte),
+		.midiReady(midiReady),
+		.outFrequency(sampleFrequency),
+		.outVelocity(sampleVelocity),
+		.outPlaying(samplePlaying)
+	);
 	
 	// SAMPLE GENERATOR
 	wire sampleReady;
 	wire [11:0] filterSample;
 	SampleGenerator sampleGen(
-		.inMidiFrequency(midi_freq),
+		.inMidiFrequency(sampleFrequency),
 		.outSample(filterSample),
 		.outSampleReady(sampleReady)
 	);
@@ -56,8 +68,8 @@ module main(
 	EnvelopeFollower envelope(
 		.inSample(envelopeSample),
 		.inSampleReady(sampleReady),
-		.inIsPlaying(midi_play),
-		.velocity(midi_vel),
+		.inIsPlaying(samplePlaying),
+		.inVelocity(sampleVelocity),
 		.outSample(dacSample)
 	);
 	

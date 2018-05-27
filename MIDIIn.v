@@ -21,52 +21,52 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module MIDIIn(
-	input clk,
-	input uart,
-	output [7:0] byte_output,
-	output output_ready
+	input clock,
+	input uartStream,
+	output [7:0] byteOutput,
+	output byteOutputReady
     );
 
-	reg[10:0] clk_counter = 0; // max 2048
-	reg[3:0] bit_counter = 0;  // max 16
-	reg[7:0] byte_input = 0;
-	reg[0:0] byte_ready = 0;   // Ready to send byte
-	reg[0:0] startbit = 0;     // Start bit has been received
-	reg[0:0] endbit = 1;       // End bit has been received
+	reg[10:0] clkCounter = 0; // max 2048
+	reg[3:0] bitCounter = 0;  // max 16
+	reg[7:0] byteInput = 0;
+	reg byteReady = 0;   // Ready to send byte
+	reg startBit = 0;    // Start bit has been received
+	reg endBit = 1;      // End bit has been received
 	
 	// 31,250 bits per second data rate
 	// 1 bit is sent for 1600 useconds
 
-	always @(posedge clk) begin
-		if (startbit == 1) begin
-			if (bit_counter == 8) begin
-				endbit <= uart;
+	always @(posedge clock) begin
+		if (startBit == 1) begin
+			if (bitCounter == 8) begin
+				endBit <= uartStream;
 			end
 			else begin
-				byte_input[bit_counter] <= uart;
+				byteInput[bitCounter] <= uartStream;
 			end
 		end
 		else begin
-			startbit <= uart;
-			byte_ready <= 0;
+			startBit <= uartStream;
+			byteReady <= 0;
 		end
 		
-		clk_counter = clk_counter + 1;
-		if (clk_counter == 800) begin
-			clk_counter = 0;
-			if (startbit == 1) begin
-				bit_counter = bit_counter + 1;
+		clkCounter = clkCounter + 1;
+		if (clkCounter == 800) begin
+			clkCounter = 0;
+			if (startBit == 1) begin
+				bitCounter = bitCounter + 1;
 			end
 		end
-		if (bit_counter == 9 && endbit == 0) begin
-			bit_counter = 0;
-			startbit <= 0;
-			endbit <= 1;
-			byte_ready <= 1;
+		if (bitCounter == 9 && endBit == 0) begin
+			bitCounter = 0;
+			startBit <= 0;
+			endBit <= 1;
+			byteReady <= 1;
 		end
 	end
 
-	assign byte_output = byte_input;
-	assign output_ready = byte_ready;
+	assign byteOutput = byteInput;
+	assign byteOutputReady = byteReady;
 	
 endmodule

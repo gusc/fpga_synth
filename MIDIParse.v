@@ -20,57 +20,57 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module MIDIParse(
-		input [7:0] midi_byte,
-		input midi_ready,
-		output [23:0] out_freq,
-		output [6:0] out_vel,
-		output out_play
+		input [7:0] midiByte,
+		input midiReady,
+		output [23:0] outFrequency,
+		output [6:0] outVelocity,
+		output outPlaying
     );
 
-	reg[3:0] read_state = 0; // command, note, velocity, reserved steps to skip all other MIDI commands
-	reg note_off = 0;	 // This is a note-off message
+	reg[3:0] readState = 0; // command, note, velocity, reserved steps to skip all other MIDI commands
+	reg noteOff = 0;	 // This is a note-off message
 	// Output is 24 bit integer, because highest frequency is 4186Hz * 1000
 	reg[23:0] frequency = 0;
 	reg[6:0] velocity = 0;
 	reg playing = 0;
 	
-	always @(posedge midi_ready) begin
-		case (read_state)
+	always @(posedge midiReady) begin
+		case (readState)
 			0: // Read MIDI command
 			begin
 				$display("8'hF0 => %b", 8'hF0);
-				$display("midi_byte & 8'hF0 => %b", midi_byte & 8'hF0);
-				if ((midi_byte & 8'hF0) == 8'b10010000) begin
+				$display("midi_byte & 8'hF0 => %b", midiByte & 8'hF0);
+				if ((midiByte & 8'hF0) == 8'b10010000) begin
 					// Note-on message (all channel)
-					note_off <= 0;
-					read_state <= read_state + 1;
+					noteOff <= 0;
+					readState <= readState + 1;
 					$display("midi_byte & 8'hF0 == 8'b10010000: Note-on message (all channel)");
 				end
-				else if ((midi_byte & 8'hF0) == 8'b10000000) begin
+				else if ((midiByte & 8'hF0) == 8'b10000000) begin
 					// Note-off message (all channels)
-					note_off <= 1;
-					read_state <= read_state + 1;
+					noteOff <= 1;
+					readState <= readState + 1;
 					$display("midi_byte & 8'hF0 == 8'b10000000: Note-off message (all channels)");
 				end
-				else if (((midi_byte & 8'hF0) == 8'b11000000)
-						|| ((midi_byte & 8'hF0) == 8'b11010000)) begin
+				else if (((midiByte & 8'hF0) == 8'b11000000)
+						|| ((midiByte & 8'hF0) == 8'b11010000)) begin
 					// Program change and Channel pressure messages have 
 					// single byte data.
-					read_state <= 4;
+					readState <= 4;
 					$display("midi_byte & 8'hF0 == 8'b11000000 || midi_byte & 8'hF0 == 8'b11010000: Program change and Channel pressure messages have single byte data.");
 				end
 				else begin
 					// Rest of standard commands have 2 bytes following
 					// except for SysEx messages, be let's hope nobody sends
 					// them to us.
-					read_state <= 3;
+					readState <= 3;
 					$display("else: Rest of standard commands have 2 bytes following except for SysEx messages, be let's hope nobody sends them to us.");
 				end
 			end
 			1: // Read Note number
 			begin
 				// Note frequency lookup table
-				case (midi_byte)
+				case (midiByte)
 					0: frequency<=8175;
 					1: frequency<=8661;
 					2: frequency<=9177;
@@ -200,30 +200,30 @@ module MIDIParse(
 					126: frequency<=11839821;
 					127: frequency<=12543853;
 				endcase
-				read_state <= read_state + 1; // Move to velocity byte
+				readState <= readState + 1; // Move to velocity byte
 			end
 			2: // Read velocity
 			begin
-				if (midi_byte == 0 || note_off == 1) begin
+				if (midiByte == 0 || noteOff == 1) begin
 					// 0-velocity note press or note-off message received
 					velocity <= 0;
 					playing <= 0;
 				end
 				else begin
-					velocity <= midi_byte[6:0];
+					velocity <= midiByte[6:0];
 					playing <= 1;
 				end
 				
-				read_state <= 0; // Wait for next command
+				readState <= 0; // Wait for next command
 			end
-			3: read_state <= read_state + 1; // Skip 2 bytes (this and the next one)
-			4: read_state <= 0; // Skip 1 byte (only this byte)
-			default: read_state <= 0;
+			3: readState <= readState + 1; // Skip 2 bytes (this and the next one)
+			4: readState <= 0; // Skip 1 byte (only this byte)
+			default: readState <= 0;
 		endcase
 	end
 	
-	assign out_play = playing;
-	assign out_vel = velocity;
-	assign out_freq = frequency;
+	assign outPlaying = playing;
+	assign outVelocity = velocity;
+	assign outFrequency = frequency;
 
 endmodule
