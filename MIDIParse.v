@@ -28,7 +28,7 @@ module MIDIParse(
     );
 
 	reg[3:0] read_state = 0; // command, note, velocity, reserved steps to skip all other MIDI commands
-	reg[0:0] note_off = 0;	 // This is a note-off message
+	reg note_off = 0;	 // This is a note-off message
 	// Output is 24 bit integer, because highest frequency is 4186Hz * 1000
 	reg[23:0] frequency = 0;
 	reg[6:0] velocity = 0;
@@ -38,27 +38,33 @@ module MIDIParse(
 		case (read_state)
 			0: // Read MIDI command
 			begin
-				if (midi_byte & 'hF0 == 8'b10010000) begin
+				$display("8'hF0 => %b", 8'hF0);
+				$display("midi_byte & 8'hF0 => %b", midi_byte & 8'hF0);
+				if ((midi_byte & 8'hF0) == 8'b10010000) begin
 					// Note-on message (all channel)
 					note_off <= 0;
 					read_state <= read_state + 1;
+					$display("midi_byte & 8'hF0 == 8'b10010000: Note-on message (all channel)");
 				end
-				else if (midi_byte & 'hF0 == 8'b10000000) begin
+				else if ((midi_byte & 8'hF0) == 8'b10000000) begin
 					// Note-off message (all channels)
 					note_off <= 1;
 					read_state <= read_state + 1;
+					$display("midi_byte & 8'hF0 == 8'b10000000: Note-off message (all channels)");
 				end
-				else if (midi_byte & 'hF0 == 8'b11000000
-						|| midi_byte & 'hF0 == 8'b11010000) begin
+				else if (((midi_byte & 8'hF0) == 8'b11000000)
+						|| ((midi_byte & 8'hF0) == 8'b11010000)) begin
 					// Program change and Channel pressure messages have 
 					// single byte data.
 					read_state <= 4;
+					$display("midi_byte & 8'hF0 == 8'b11000000 || midi_byte & 8'hF0 == 8'b11010000: Program change and Channel pressure messages have single byte data.");
 				end
 				else begin
 					// Rest of standard commands have 2 bytes following
 					// except for SysEx messages, be let's hope nobody sends
 					// them to us.
 					read_state <= 3;
+					$display("else: Rest of standard commands have 2 bytes following except for SysEx messages, be let's hope nobody sends them to us.");
 				end
 			end
 			1: // Read Note number
@@ -207,10 +213,12 @@ module MIDIParse(
 					velocity <= midi_byte[6:0];
 					playing <= 1;
 				end
+				
 				read_state <= 0; // Wait for next command
 			end
 			3: read_state <= read_state + 1; // Skip 2 bytes (this and the next one)
 			4: read_state <= 0; // Skip 1 byte (only this byte)
+			default: read_state <= 0;
 		endcase
 	end
 	

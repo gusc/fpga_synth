@@ -57,7 +57,7 @@ module main(
 		.inSample(envelopeSample),
 		.inSampleReady(sampleReady),
 		.inIsPlaying(midi_play),
-		.inVelocity(midi_vel),
+		.velocity(midi_vel),
 		.outSample(dacSample)
 	);
 	
