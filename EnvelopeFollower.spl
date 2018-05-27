@@ -1,0 +1,11 @@
+[Inputs]
+inSampleReady
+inIsPlaying
+=inSample[11:0]=
+=inVelocity[6:0]=
+[Outputs]
+=outSample[11:0]=
+[BiDir]
+[ATTRIBUTES]
+VeriModel EnvelopeFollower
+
