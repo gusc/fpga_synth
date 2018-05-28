@@ -39,7 +39,7 @@ module SampleGenerator(
 	output reg [11:0] outSample;
 	
 	// === REGISTERS ===
-	reg [N-1:0] phase = 0; // 24 bit phase
+	reg [N-1:0] phase = 0; // 24bit phase
 	
 	// === FREQUENCY STEP TABLE ==
 	reg [N-1:0] frequency_step [127:0];
