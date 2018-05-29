@@ -33,36 +33,50 @@ module MIDIIn(
 	reg byteReady = 0;   // Ready to send byte
 	reg startBit = 0;    // Start bit has been received
 	reg endBit = 1;      // End bit has been received
+	reg readBit = 0;     // Filter out raising and falling edges 
 	
 	// 31,250 bits per second data rate
 	// 1 bit is sent for 1600 useconds
+	
+	// Signal: (start bit = 1, 8 data bits, end bit = 0)
+	//        _     _     _   _ 
+	//         |_ _| |_ _| |_| |_
+	//        s 0 1 2 3 4 5 6 7 e
 
 	always @(posedge clock) begin
-		if (startBit == 1) begin
-			if (bitCounter == 8) begin
-				endBit <= uartStream;
+	    if (readBit == 1) begin
+			if (startBit == 1) begin
+				if (bitCounter == 8) begin
+					endBit <= uartStream;
+				end
+				else begin
+					byteInput[bitCounter] <= uartStream;
+				end
 			end
 			else begin
-				byteInput[bitCounter] <= uartStream;
+				startBit <= uartStream;
+				byteReady <= 0;
 			end
-		end
-		else begin
-			startBit <= uartStream;
-			byteReady <= 0;
+			readBit = 0;
 		end
 		
 		clkCounter = clkCounter + 1;
-		if (clkCounter == 800) begin
+		if (clkCounter == 200) begin
+			readBit = 1;
+		end
+		else if (clkCounter == 800) begin
 			clkCounter = 0;
 			if (startBit == 1) begin
 				bitCounter = bitCounter + 1;
 			end
 		end
-		if (bitCounter == 9 && endBit == 0) begin
+		if (bitCounter == 9) begin
 			bitCounter = 0;
+			if (endBit == 0) begin
+				byteReady <= 1;
+			end
 			startBit <= 0;
 			endBit <= 1;
-			byteReady <= 1;
 		end
 	end
 
