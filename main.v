@@ -35,31 +35,32 @@ module main(
 	);
 		
 	// MIDI PARSER
-	wire[23:0] sampleFrequency;  	// 24bit frequency * 1000
+	wire[6:0] midiFrequencyIndex; // table index for frequency_step of 24bit frequency * 1000
 	wire[6:0] sampleVelocity;    	// 0-127
 	wire samplePlaying;        		// Is MIDI playback active?
 	MIDIParse parser(
 		.midiByte(midiByte),
 		.midiReady(midiReady),
-		.outFrequency(sampleFrequency),
+		.outFrequencyIndex(midiFrequencyIndex),
 		.outVelocity(sampleVelocity),
 		.outPlaying(samplePlaying)
 	);
 	
 	// SAMPLE GENERATOR
-	wire sampleReady;
+	wire sampleClockCE; // Sampling Clock Enable flag
 	wire [11:0] filterSample;
 	SampleGenerator sampleGen(
-		.inMidiFrequency(sampleFrequency),
-		.outSample(filterSample),
-		.outSampleReady(sampleReady)
+		.inCLK(CLK_50MHZ),
+		.inSampleClockCE(sampleClockCE),
+		.inMidiFrequencyIndex(midiFrequencyIndex),
+		.outSample(filterSample)
 	);
 	
 	// CONVOLUTIONAL FILTER
 	wire [11:0] envelopeSample;
 	ConvolutionFilter filter(
 		.inSample(filterSample),
-		.inSampleReady(sampleReady),
+		.inSampleReady(sampleClockCE),
 		.outSample(envelopeSample)
 	);
 	
@@ -67,10 +68,14 @@ module main(
 	wire [11:0] dacSample;
 	EnvelopeFollower envelope(
 		.inSample(envelopeSample),
-		.inSampleReady(sampleReady),
+		.inSampleReady(sampleClockCE),
 		.inIsPlaying(samplePlaying),
 		.inVelocity(sampleVelocity),
 		.outSample(dacSample)
 	);
+	
+	// Sampling is always enabled (sampling happens at every main clock's cycle)
+	// TODO: May want to change this later to toggle at lower frequencies for DAC
+	assign sampleClockCE = 1; 
 	
 endmodule
