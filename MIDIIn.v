@@ -31,52 +31,75 @@ module MIDIIn(
 	reg[3:0] bitCounter = 0;  // max 16
 	reg[7:0] byteInput = 0;
 	reg byteReady = 0;   // Ready to send byte
-	reg startBit = 0;    // Start bit has been received
-	reg endBit = 1;      // End bit has been received
-	reg readBit = 0;     // Filter out raising and falling edges 
+	reg startBit = 1;    // Start bit has been received
+	reg endBit = 0;      // End bit has been received
+	reg readBit = 0;     // When 1 we're ready to read the a bit
+	reg readByte = 0;    // When 1 we're synced and ready to read the byte
+	reg delayEnd = 0;    // When 1 we've reached the end, we just wait till byte ends
 	
 	// 31,250 bits per second data rate
-	// 1 bit is sent for 1600 useconds
+	// 1 bit is sent for 32 useconds which is 1600 cycles @ 50Mhz
 	
-	// Signal: (start bit = 1, 8 data bits, end bit = 0)
-	//        _     _     _   _ 
-	//         |_ _| |_ _| |_| |_
-	//        s 0 1 2 3 4 5 6 7 e
+	// Signal: (idle, start bit = 0, 8 data bits, end bit = 1)
+	//    _ _       _     _   _ _ _ _
+	//       |_ _ _| |_ _| |_| 
+	//    i i s 0 1 2 3 4 5 6 7 e i i
 
 	always @(posedge clock) begin
+		// Sync with the UART message
+		if (readByte == 0 && uartStream == 0) begin
+			// UART signal dropped, that means we might have hit a start bit
+			readByte <= 1;
+			readBit <= 1;
+			byteReady <= 0;
+			clkCounter = 0;
+			bitCounter = 0;
+		end
+		
+		// Start counter when we're synced up
+		if (readByte == 1) begin
+			clkCounter = clkCounter + 1;
+			if (clkCounter == 200) begin
+				// Wait some 200 cycles for the signal to stabilize
+				readBit <= 1;
+			end
+			else if (clkCounter == 1600) begin
+				// Each bit will take 1600 50MHz cycles (32us) to complete
+				clkCounter = 0;
+				bitCounter = bitCounter + 1;
+			end
+		end
+		
+		// Read a single bit
 	    if (readBit == 1) begin
-			if (startBit == 1) begin
-				if (bitCounter == 8) begin
+			if (startBit == 0) begin
+				if (bitCounter == 9) begin
 					endBit <= uartStream;
 				end
-				else begin
-					byteInput[bitCounter] <= uartStream;
+				else if (bitCounter < 9) begin
+					byteInput[bitCounter - 1] <= uartStream;
 				end
 			end
 			else begin
 				startBit <= uartStream;
-				byteReady <= 0;
 			end
-			readBit = 0;
+			// Done reading bit, wait for the next one
+			readBit <= 0;
 		end
 		
-		clkCounter = clkCounter + 1;
-		if (clkCounter == 200) begin
-			readBit = 1;
-		end
-		else if (clkCounter == 800) begin
-			clkCounter = 0;
-			if (startBit == 1) begin
-				bitCounter = bitCounter + 1;
-			end
-		end
-		if (bitCounter == 9) begin
-			bitCounter = 0;
-			if (endBit == 0) begin
+		if (bitCounter == 9 && startBit == 0) begin
+			// Last bit, should be low, only then we say taht the byte
+			// is ready, otherwise we reset
+			if (endBit == 1) begin
 				byteReady <= 1;
 			end
-			startBit <= 0;
-			endBit <= 1;
+		end
+		else if (bitCounter == 10) begin
+			// Reset the state and wait for the next byte
+			readBit <= 0;
+			readByte <= 0;
+			startBit <= 1;
+			endBit <= 0;
 		end
 	end
 

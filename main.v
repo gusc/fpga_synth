@@ -21,7 +21,7 @@
 module main(
 		input CLK_50MHZ,
 		input MIDI_IN,
-		output DBG_LED
+		output [7:0] DBG_LED
     );
 
 	// MIDI INPUT
@@ -45,6 +45,18 @@ module main(
 		.outVelocity(sampleVelocity),
 		.outPlaying(samplePlaying)
 	);
+	
+	// MIDI Debug
+//	reg[7:0] dbgData;
+//	always @(posedge CLK_50MHZ) begin
+//		if (samplePlaying == 1) begin
+//			dbgData = midiFrequencyIndex;
+//		end
+//		else begin
+//			dbgData = 8'h0;
+//		end
+//	end
+//	assign DBG_LED = dbgData;
 	
 	// SAMPLE GENERATOR
 	wire sampleClockCE; // Sampling Clock Enable flag

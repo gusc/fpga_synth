@@ -7,5 +7,12 @@ NET "MIDI_IN" LOC = "D12";
 // DAC output
 // TODO
 
-// Debug LED
-NET "DBG_LED" LOC = "F12";
+// Debug LEDs
+NET "DBG_LED<0>" LOC = "F12";
+NET "DBG_LED<1>" LOC = "E12";
+NET "DBG_LED<2>" LOC = "E11";
+NET "DBG_LED<3>" LOC = "F11";
+NET "DBG_LED<4>" LOC = "C11";
+NET "DBG_LED<5>" LOC = "D11";
+NET "DBG_LED<6>" LOC = "E9";
+NET "DBG_LED<7>" LOC = "F9";
