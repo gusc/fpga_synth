@@ -19,6 +19,10 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module main(
+		output SYNC,
+		output DOUTA,
+		output DOUTB,
+		output SCLK,
 		input CLK_50MHZ,
 		input MIDI_IN,
 		output [7:0] DBG_LED
@@ -47,16 +51,16 @@ module main(
 	);
 	
 	// MIDI Debug
-//	reg[7:0] dbgData;
-//	always @(posedge CLK_50MHZ) begin
-//		if (samplePlaying == 1) begin
-//			dbgData = midiFrequencyIndex;
-//		end
-//		else begin
-//			dbgData = 8'h0;
-//		end
-//	end
-//	assign DBG_LED = dbgData;
+	reg[7:0] dbgData;
+	always @(posedge CLK_50MHZ) begin
+		if (samplePlaying == 1) begin
+			dbgData = midiFrequencyIndex;
+		end
+		else begin
+			dbgData = 8'h0;
+		end
+	end
+	assign DBG_LED = dbgData;
 	
 	// SAMPLE GENERATOR
 	wire sampleClockCE; // Sampling Clock Enable flag
@@ -88,6 +92,30 @@ module main(
 	
 	// Sampling is always enabled (sampling happens at every main clock's cycle)
 	// TODO: May want to change this later to toggle at lower frequencies for DAC
-	assign sampleClockCE = 1; 
+	reg cclock = 0;
+	reg[64:0] ccounter = 0;
+	always @(posedge CLK_50MHZ) begin		
+		if(ccounter < 2) begin
+			cclock = 1;
+		end
+		else if(ccounter < 300000) begin
+			cclock = 0;
+		end
+		else begin
+			ccounter = 0;
+		end
+		ccounter = ccounter + 1;
+	end
+	assign sampleClockCE = cclock; 
 	
+	
+	DAC dac(
+		.inSample(dacSample),
+		.inSampleReady(sampleClockCE),
+		.inClk(CLK_50MHZ),
+		.outChipSelect(SYNC),
+		.outDataA(DOUTA),
+		.outDataB(DOUTB),
+		.outSerialClk(SCLK)
+	);
 endmodule
