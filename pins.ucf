@@ -16,3 +16,10 @@ NET "DBG_LED<4>" LOC = "C11";
 NET "DBG_LED<5>" LOC = "D11";
 NET "DBG_LED<6>" LOC = "E9";
 NET "DBG_LED<7>" LOC = "F9";
+
+
+//DAC
+NET "SYNC" LOC = "A6";
+NET "DOUTA" LOC = "B6";
+NET "DOUTB" LOC = "E7";
+NET "SCLK" LOC = "F7";
