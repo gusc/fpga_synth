@@ -38,25 +38,31 @@ module main(
 	wire[6:0] midiFrequencyIndex; // table index for frequency_step of 24bit frequency * 1000
 	wire[6:0] sampleVelocity;    	// 0-127
 	wire samplePlaying;        		// Is MIDI playback active?
+	wire[6:0] envAttack;
+	wire[6:0] envRelease;
+	wire[6:0] filterFreq;
 	MIDIParse parser(
 		.midiByte(midiByte),
 		.midiReady(midiReady),
 		.outFrequencyIndex(midiFrequencyIndex),
 		.outVelocity(sampleVelocity),
-		.outPlaying(samplePlaying)
+		.outPlaying(samplePlaying),
+		.outEnvAttack(envAttack),
+		.outEnvRelease(envRelease),
+		.outFilterFreq(filterFreq)
 	);
 	
 	// MIDI Debug
-//	reg[7:0] dbgData;
-//	always @(posedge CLK_50MHZ) begin
-//		if (samplePlaying == 1) begin
-//			dbgData = midiFrequencyIndex;
-//		end
-//		else begin
-//			dbgData = 8'h0;
-//		end
-//	end
-//	assign DBG_LED = dbgData;
+	reg[7:0] dbgData;
+	always @(posedge CLK_50MHZ) begin
+		if (samplePlaying == 1) begin
+			dbgData = filterFreq;
+		end
+		else begin
+			dbgData = 8'h0;
+		end
+	end
+	assign DBG_LED = dbgData;
 	
 	// SAMPLE GENERATOR
 	wire sampleClockCE; // Sampling Clock Enable flag
