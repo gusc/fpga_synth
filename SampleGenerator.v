@@ -156,25 +156,25 @@ module SampleGenerator(
 		frequency_step[106] = (N_SQUARED * 3729310 ) / SAMPLE_CLOCK_RATE_HZ;
 		frequency_step[107] = (N_SQUARED * 3951066 ) / SAMPLE_CLOCK_RATE_HZ;
 		frequency_step[108] = (N_SQUARED * 4186009 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[109] = (N_SQUARED * 4434922 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[110] = (N_SQUARED * 4698636 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[111] = (N_SQUARED * 4978031 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[112] = (N_SQUARED * 5274040 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[113] = (N_SQUARED * 5587651 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[114] = (N_SQUARED * 5919910 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[115] = (N_SQUARED * 6271926 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[116] = (N_SQUARED * 6644875 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[117] = (N_SQUARED * 7040000 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[118] = (N_SQUARED * 7458620 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[119] = (N_SQUARED * 7902132 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[120] = (N_SQUARED * 8372018 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[121] = (N_SQUARED * 8869844 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[122] = (N_SQUARED * 9397272 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[123] = (N_SQUARED * 9956063 ) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[124] = (N_SQUARED * 10548081) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[125] = (N_SQUARED * 11175303) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[126] = (N_SQUARED * 11839821) / SAMPLE_CLOCK_RATE_HZ;
-		frequency_step[127] = (N_SQUARED * 12543853) / SAMPLE_CLOCK_RATE_HZ;
+		frequency_step[109] = 10297;
+		frequency_step[110] = 10910;
+		frequency_step[111] = 11558;
+		frequency_step[112] = 12246;
+		frequency_step[113] = 12974;
+		frequency_step[114] = 13746;
+		frequency_step[115] = 14563;
+		frequency_step[116] = 15429;
+		frequency_step[117] = 16346;
+		frequency_step[118] = 17318;
+		frequency_step[119] = 18348;
+		frequency_step[120] = 19439;
+		frequency_step[121] = 20595;
+		frequency_step[122] = 21820;
+		frequency_step[123] = 23117;
+		frequency_step[124] = 24492;
+		frequency_step[125] = 25949;
+		frequency_step[126] = 27492;
+		frequency_step[127] = 29126;
 	end
 	
 	// === SAMPLER ===

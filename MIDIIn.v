@@ -35,7 +35,7 @@ module MIDIIn(
 	reg endBit = 0;      // End bit has been received
 	reg readBit = 0;     // When 1 we're ready to read the a bit
 	reg readByte = 0;    // When 1 we're synced and ready to read the byte
-	reg delayEnd = 0;    // When 1 we've reached the end, we just wait till byte ends
+	//reg delayEnd = 0;    // When 1 we've reached the end, we just wait till byte ends
 	
 	// 31,250 bits per second data rate
 	// 1 bit is sent for 32 useconds which is 1600 cycles @ 50Mhz

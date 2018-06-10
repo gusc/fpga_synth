@@ -19,9 +19,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module main(
-		output SYNC,
-		output DOUTA,
-		output DOUTB,
+		//output SYNC,
+		//output DOUTA,
+		//output DOUTB,
 		output SCLK,
 		input CLK_50MHZ,
 		
@@ -33,6 +33,7 @@ module main(
 		output DAC_CS,
 		output DAC_CLR
     );
+	wire [2:0]filterType = 000;
 	// 44.1 kHz oscilator
 	wire clk_44100;
 	Oscillator_44100 osc44100(
@@ -94,6 +95,7 @@ module main(
 	// CONVOLUTIONAL FILTER
 	wire [11:0] envelopeSample;
 	ConvolutionFilter filter(
+		.inFilterType(filterType),
 		.inSample(filterSample),
 		.inSampleReady(sampleClockCE),
 		.outSample(envelopeSample)

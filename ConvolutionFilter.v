@@ -22,6 +22,14 @@ module ConvolutionFilter(
 	input [11:0] inSample,
 	input inSampleReady,
 	
+	// FIR Filter types:
+	// averaged		- 000
+	// low pass		- 001
+	// high pass	- 010
+	// band pass	- 011
+	// band reject - 100
+	input [2:0] inFilterType,
+	
 	output [11:0] outSample
 );
 	//localparam kernelType = 0;
@@ -39,20 +47,37 @@ module ConvolutionFilter(
 	integer bitIter;
 	
 	always @(posedge inSampleReady) begin
-		sampleBuffer = sampleBuffer << 12;
-		sampleBuffer[11:0] = inSample;
-		
-		sample = 0;
-		bitIter = 0;
-		for(i = 0; i < bufferedSamples; i = i + 1) begin
-			// In Verilog the range must be bounded by constant expressions, so copy bit by bit, could use mask instead
-			for(j = 0; j < sampleSize; j = j + 1) begin
-				tempSample[j] = sampleBuffer[bitIter];
-				bitIter = bitIter + 1;
+		if(inFilterType == 000) begin // Averaging filter
+			sampleBuffer = sampleBuffer << 12;
+			sampleBuffer[11:0] = inSample;
+			
+			sample = 0;
+			bitIter = 0;
+			for(i = 0; i < bufferedSamples; i = i + 1) begin
+				// In Verilog the range must be bounded by constant expressions, so copy bit by bit, could use mask instead
+				for(j = 0; j < sampleSize; j = j + 1) begin
+					tempSample[j] = sampleBuffer[bitIter];
+					bitIter = bitIter + 1;
+				end
+				sampleSum = sampleSum + tempSample;
 			end
-			sampleSum = sampleSum + tempSample;
+			sampleSum = sampleSum / bufferedSamples;
 		end
-		sampleSum = sampleSum / bufferedSamples;
+		else if (inFilterType == 001) begin // low pass FIR filter
+			sampleSum = 0;
+		end 
+		else if (inFilterType == 010) begin // high pass FIR filter
+			sampleSum = 0;
+		end
+		else if (inFilterType == 011) begin // band pass	- 011
+			sampleSum = 0;
+		end
+		else if (inFilterType == 100) begin // band reject - 100
+			sampleSum = 0;
+		end	
+		else begin
+			sampleSum = 0;
+		end
 	end
 	
 	assign outSample = sample;
