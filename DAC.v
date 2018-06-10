@@ -1,167 +1,112 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: Guntars, Artûrs
-// 
-// Create Date:    11:40:23 06/02/2018 
-// Design Name: 
-// Module Name:    DAC 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
+
 module DAC(
-	input inClk,
-	input [11:0]inSample,
-	input inSampleReady,
-	output outChipSelect,
-	output outDataA,
-	output outDataB,
-	output outSerialClk
+	// speed at which bits are written in dac, must be slower than 50mhz
+	input IN_CLOCK,
+	// set one to reset dac and 0 to start writing
+	input IN_RESET,
+	// actual value for dac output
+	input [11:0]IN_BITS,
+	// dac clock
+	output OUT_SPI_SCK,
+	// dac output
+    output OUT_SPI_MOSI,
+	// dac write flag
+    output OUT_DAC_CS,
+	// dac clear flag
+    output OUT_DAC_CLR,
+	// used by simulation to debug
+	output [4:0]OUT_STATE,
+	// used by simulation to debug
+	output [31:0]OUT_WRITE_BIT
 );
-	reg chipSelect = 1;
-	reg dataA = 0;
 
-	
-	reg [15:0] state = 16'b0011111111111111;
-    reg serialClk = 0;
-    reg write;
-    integer i = 16;
-    reg writeDone = 0;
-	 
-	 
-	 
-	 reg [11:0] sine [62:0];
-	initial begin
-		sine[0] = 2000;
-		sine[1] = 2100;
-		sine[2] = 2200;
-		sine[3] = 2299;
-		sine[4] = 2397;
-		sine[5] = 2495;
-		sine[6] = 2591;
-		sine[7] = 2686;
-		sine[8] = 2779;
-		sine[9] = 2870;
-		sine[10] = 2959;
-		sine[11] = 3045;
-		sine[12] = 3129;
-		sine[13] = 3210;
-		sine[14] = 3288;
-		sine[15] = 3363;
-		sine[16] = 3435;
-		sine[17] = 3503;
-		sine[18] = 3567;
-		sine[19] = 3627;
-		sine[20] = 3683;
-		sine[21] = 3735;
-		sine[22] = 3782;
-		sine[23] = 3826;
-		sine[24] = 3864;
-		sine[25] = 3898;
-		sine[26] = 3927;
-		sine[27] = 3951;
-		sine[28] = 3971;
-		sine[29] = 3985;
-		sine[30] = 3995;
-		sine[31] = 4000;
-		sine[32] = 3999;
-		sine[33] = 3994;
-		sine[34] = 3983;
-		sine[35] = 3968;
-		sine[36] = 3948;
-		sine[37] = 3923;
-		sine[38] = 3893;
-		sine[39] = 3858;
-		sine[40] = 3819;
-		sine[41] = 3775;
-		sine[42] = 3726;
-		sine[43] = 3674;
-		sine[44] = 3617;
-		sine[45] = 3556;
-		sine[46] = 3491;
-		sine[47] = 3423;
-		sine[48] = 3351;
-		sine[49] = 3276;
-		sine[50] = 3197;
-		sine[51] = 3115;
-		sine[52] = 3031;
-		sine[53] = 2944;
-		sine[54] = 2855;
-		sine[55] = 2763;
-		sine[56] = 2670;
-		sine[57] = 2575;
-		sine[58] = 2478;
-		sine[59] = 2381;
-		sine[60] = 2282;
-		sine[61] = 2183;
-		sine[62] = 2083;
+reg SPI_MOSI = 0;
+reg DAC_CS = 1;
+reg DAC_CLR = 0;
+reg SPI_SCK = 0;
+
+reg [31:0]BITS = 0;
+reg [4:0] STATE = 1;
+
+// 8-bit don't care 
+// 4-bit command
+// 4-bit dac pin 
+// 12-bit dac value (these will be overriden from IN_BITS)
+// 4-bit don't care
+// currently this is hardcoded to:
+// command: write and update dac (0011)
+// pin: pin D (0011) 2.5v max
+integer BASE_BITS = 32'b10000000001100110000000000000001; 
+integer CURRENT_BIT = 32;
+
+always @(posedge IN_CLOCK) begin
+	if (IN_RESET == 1) begin
+		DAC_CS = 1;
+		DAC_CLR = 0;
+		STATE = 1;
+	end else begin
+		case (STATE)
+		1: begin
+			DAC_CS = 1;
+			DAC_CLR = 1;
+			
+			SPI_SCK = 0;
+			SPI_MOSI = 0;
+			BITS = 0;
+			CURRENT_BIT = 0;
+			STATE = 2;
+		end
+		2: begin
+			BITS = BASE_BITS | (IN_BITS << 4);
+			CURRENT_BIT = 32;
+			STATE = 3;
+		end
+		3: begin
+			DAC_CS = 0;
+			SPI_SCK = 0;
+			SPI_MOSI = BITS[CURRENT_BIT - 1];
+			CURRENT_BIT = CURRENT_BIT - 1;
+			STATE = 4;
+		end
+		4: begin			
+			if (CURRENT_BIT > 0) begin
+				STATE = 3;
+			end else begin
+				STATE = 5;
+			end
+			
+			SPI_SCK = 1;
+		end
+		5: begin
+			SPI_SCK = 0;
+			STATE = 6;
+		end
+		6: begin
+			DAC_CS = 1;
+			SPI_SCK = 1;
+			STATE = 1;
+		end
+		default: begin
+			DAC_CS = 1;
+			DAC_CLR = 1;
+			SPI_SCK = 0;
+			SPI_MOSI = 0;
+			STATE = 1;
+		end
+		endcase
 	end
-	integer iterator = 0;
-	
-	
-	 always @(posedge inClk) begin
-		  serialClk <= ~serialClk;
-	 end
-	 
-	 always @(posedge inSampleReady or negedge serialClk) begin
-		if(inSampleReady == 1) begin
-			state[11:0] = sine[iterator];
-			iterator = iterator + 1;
-			if(iterator == 63) begin
-				iterator = 0;
-			end
-			chipSelect = 0;
-		end
-		if(chipSelect == 1) begin
-			dataA = 0;
-		end
-		if(serialClk == 0) begin
-			if(chipSelect == 0) begin
-				
-				if (i == 0) begin
-					i = 16;
-					chipSelect = 1;
-					
-				end
-				else begin
-					dataA = state[i - 1];
-					i = i - 1;
-				end
-				
-			end
-		end
-	 end
-	 
-	
-	/*always @(posedge inSampleReady) begin
-		
-		
-		state[11:0] = sine[iterator];
-		iterator = iterator + 1;
-		if(iterator == 63) begin
-			iterator = 0;
-		end
-		if(iterator == 0) begin
-			state[11:0] = 12'b000000000000;
-		end
-		else begin
-			state[11:0] = 12'b111111111111;
-		end
-		iterator = (iterator + 1) % 2;
-	end*/
+end
 
-	assign outChipSelect = chipSelect;
-	assign outDataA = dataA;
-	assign outDataB = dataA;
-	assign outSerialClk = serialClk;
+assign OUT_SPI_MOSI = SPI_MOSI;
+assign OUT_SPI_SCK = SPI_SCK;
+
+assign OUT_DAC_CS = DAC_CS;
+assign OUT_DAC_CLR = DAC_CLR;
+
+// debugging
+assign OUT_STATE = STATE;
+assign OUT_WRITE_BIT = BITS;
 
 endmodule
+
