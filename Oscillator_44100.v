@@ -25,7 +25,7 @@ module Oscillator_44100(
 // Source: https://www.edaboard.com/showthread.php?81965-Help-me-convert-convert-a-50-MHZ-clock-into-44-1-KHZ-clock&p=358693&viewfull=1#post358693
 // === I/O ===
 input CLK_50MHZ;
-output reg CLK_44100HZ;
+output reg CLK_44100HZ = 0;
 
 // === HELPER VARIABLES ===
 wire clkadcm, clka, locked;
@@ -35,7 +35,7 @@ reg [9:0] count = 0;
 
 // === 44100 HZ divider logic  ===
 // Synthesize 50 MHz * 21/25 * 21/25 / 800 = 44100 Hz
-DCM dcm1 (.CLKIN(clk50M), .RST(1'b0), .CLKFX(clkadcm), .LOCKED(locked));
+DCM dcm1 (.CLKIN(CLK_50MHZ), .RST(1'b0), .CLKFX(clkadcm), .LOCKED(locked));
 defparam dcm1.CLK_FEEDBACK       = "NONE";
 defparam dcm1.CLKFX_MULTIPLY     = 21;
 defparam dcm1.CLKFX_DIVIDE       = 25;
