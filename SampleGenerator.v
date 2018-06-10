@@ -29,14 +29,15 @@ module SampleGenerator(
 	
 	// === PARAMETERS ===
 	parameter SAMPLE_CLOCK_RATE_HZ = 441000;
-	parameter N = 24;
+	parameter N = 32; // Phase bit width
+	parameter M = 12; // Sample output bit width
 	parameter N_SQUARED = N * N;
 	
 	// === I/O ===
 	input inCLK;
 	input inSampleClockCE;
 	input [6:0] inMidiFrequencyIndex;
-	output reg [11:0] outSample;
+	output reg [M-1:0] outSample;
 	
 	// === REGISTERS ===
 	reg [N-1:0] phase = 0; // 24bit phase
@@ -181,7 +182,7 @@ module SampleGenerator(
 		// Perform phase update and sample output shift only when sampling is clock-enabled
 		if (inSampleClockCE) begin
 			phase <= phase + frequency_step[inMidiFrequencyIndex];
-			outSample <= (outSample << 1) | phase[N-1];
+			outSample <= phase[N-1:N-M]; // Return cutoff of top phase bits
 		end
 	end
 endmodule
