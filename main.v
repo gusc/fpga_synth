@@ -33,11 +33,18 @@ module main(
 		output DAC_CS,
 		output DAC_CLR
     );
+	// 44.1 kHz oscilator
+	wire clk_44100;
+	Oscillator_44100 osc44100(
+		.CLK_50MHZ(CLK_50MHZ),
+		.CLK_44100HZ(clk_44100)
+	);	
+	
 	// MIDI INPUT
 	wire[7:0] midiByte;   			// 8-bit MIDI byte
 	wire midiReady;       			// MIDI byte successfully received
 	MIDIIn midi(
-		.clock(CLK_50MHZ),
+		.clock(clk_44100),
 		.uartStream(MIDI_IN),
 		.byteOutput(midiByte),
 		.byteOutputReady(midiReady)
@@ -64,7 +71,7 @@ module main(
 	
 	// MIDI Debug
 	reg[7:0] dbgData;
-	always @(posedge CLK_50MHZ) begin
+	always @(posedge clk_44100) begin
 		if (samplePlaying == 1) begin
 			dbgData = filterFreq;
 		end
@@ -78,7 +85,7 @@ module main(
 	wire sampleClockCE; // Sampling Clock Enable flag
 	wire [11:0] filterSample;
 	SampleGenerator sampleGen(
-		.inCLK(CLK_50MHZ),
+		.inCLK(clk_44100),
 		.inSampleClockCE(sampleClockCE),
 		.inMidiFrequencyIndex(midiFrequencyIndex),
 		.outSample(filterSample)
@@ -143,7 +150,7 @@ module main(
 
 	reg reset = 0;
 	DAC out(
-		.IN_CLOCK(SLOW_CLOCK),
+		.IN_CLOCK(clk_44100),
 		.IN_RESET(IN_RESET),
 		.IN_BITS(BITS),
 
