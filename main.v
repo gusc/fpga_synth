@@ -24,8 +24,9 @@ module main(
 		//output DOUTB,
 		output SCLK,
 		input CLK_50MHZ,
-		
+		// MIDI UART
 		input MIDI_IN,
+		// DEBUGGING OUTPUT
 		output [7:0] DBG_LED,
 		// DAC
 		output SPI_MOSI,
@@ -33,11 +34,6 @@ module main(
 		output DAC_CS,
 		output DAC_CLR
     );
-	wire [2:0]filterType = 000;
-	// Sample generation wave mode
-	// 0 - Sine-wave (default)
-	// 1 - Square-wave
-	wire [1:0] waveMode = 0; 
 	
 	// 44.1 KHZ OSCILLATOR
 	wire clk_44100;
@@ -50,7 +46,7 @@ module main(
 	wire[7:0] midiByte;   			// 8-bit MIDI byte
 	wire midiReady;       			// MIDI byte successfully received
 	MIDIIn midi(
-		.clock(clk_44100),
+		.clock(CLK_50MHZ),
 		.uartStream(MIDI_IN),
 		.byteOutput(midiByte),
 		.byteOutputReady(midiReady)
@@ -58,12 +54,17 @@ module main(
 		
 	// MIDI PARSER
 	wire[6:0] midiFrequencyIndex; // table index for frequency_step of 24bit frequency * 1000
-	wire[6:0] sampleVelocity;    	// 0-127
-	wire samplePlaying;        		// Is MIDI playback active?
+	wire[6:0] sampleVelocity;     // 0-127
+	wire samplePlaying;        	  // Is MIDI playback active?
 	wire[6:0] envAttack;
 	wire[6:0] envRelease;
 	wire[6:0] filterFreq;
-	
+	// Sample generation wave mode
+	// 0 - Sine-wave (default)
+	// 1 - Square-wave
+	wire[1:0] waveMode;
+	// TODO: implement MIDI parser for this selector
+	wire[2:0]filterType = 000;
 	MIDIParse parser(
 		.midiByte(midiByte),
 		.midiReady(midiReady),
@@ -72,20 +73,9 @@ module main(
 		.outPlaying(samplePlaying),
 		.outEnvAttack(envAttack),
 		.outEnvRelease(envRelease),
-		.outFilterFreq(filterFreq)
+		.outFilterFreq(filterFreq),
+		.outWaveSel(waveMode)
 	);
-	
-	// MIDI Debug
-	reg[7:0] dbgData;
-	always @(posedge clk_44100) begin
-		if (samplePlaying == 1) begin
-			dbgData = filterFreq;
-		end
-		else begin
-			dbgData = 8'h0;
-		end
-	end
-	assign DBG_LED = dbgData;
 	
 	// SAMPLE GENERATOR	
 	wire sampleClockCE; // Sampling Clock Enable flag
@@ -156,6 +146,7 @@ module main(
 		end
 	end
 
+	// DAC OUTPUT
 	reg reset = 0;
 	DAC out(
 		.IN_CLOCK(clk_44100),
@@ -168,6 +159,11 @@ module main(
 		.OUT_DAC_CS(DAC_CS), 
 		.OUT_DAC_CLR(DAC_CLR)
 	);
-	
 	assign IN_RESET = reset;
+	
+	// DEBUGGING
+	reg[7:0] dummy = 7'h7F;
+	// Do something useful
+	assign DBG_LED = dummy;
+	
 endmodule
