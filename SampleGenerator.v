@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 module SampleGenerator(
 	inCLK,
+	inWaveMode,
 	inSampleClockCE,
 	inMidiFrequencyIndex,	
 	outSample
@@ -34,6 +35,7 @@ module SampleGenerator(
 	
 	// === I/O ===
 	input inCLK;
+	input [1:0] inWaveMode;
 	input inSampleClockCE;
 	input [6:0] inMidiFrequencyIndex;
 	output reg [M-1:0] outSample;
@@ -1209,7 +1211,16 @@ module SampleGenerator(
 		// Perform phase update and sample output shift only when sampling is clock-enabled
 		if (inSampleClockCE) begin
 			phase <= phase + frequency_step[inMidiFrequencyIndex];
-			outSample <= sinewave[phase[N-1:N-10]]; // Return cutoff of top phase bits
+			
+			// Switch on sample wave mode
+			case(inWaveMode)
+				// 0 - Sinewave: signed 12 bit Sinewave lookup table from 10 phase bits (1024 unique sinewave samples)
+				0: outSample <= sinewave[phase[N-1:N-10]];
+				// 1 - Squarewave: signed 12 bit positive and negative maximums
+				1: outSample <= (phase[N-1] ?  12'h801 : 12'h7ff); 
+				// default - Sinewave
+				default: outSample <= sinewave[phase[N-1:N-10]];
+			endcase
 		end
 	end
 endmodule

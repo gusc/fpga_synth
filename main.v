@@ -34,7 +34,12 @@ module main(
 		output DAC_CLR
     );
 	wire [2:0]filterType = 000;
-	// 44.1 kHz oscilator
+	// Sample generation wave mode
+	// 0 - Sine-wave (default)
+	// 1 - Square-wave
+	wire [1:0] waveMode = 0; 
+	
+	// 44.1 KHZ OSCILLATOR
 	wire clk_44100;
 	Oscillator_44100 osc44100(
 		.CLK_50MHZ(CLK_50MHZ),
@@ -82,11 +87,12 @@ module main(
 	end
 	assign DBG_LED = dbgData;
 	
-	// SAMPLE GENERATOR
+	// SAMPLE GENERATOR	
 	wire sampleClockCE; // Sampling Clock Enable flag
 	wire [11:0] filterSample;
 	SampleGenerator sampleGen(
 		.inCLK(clk_44100),
+		.inWaveMode(waveMode),
 		.inSampleClockCE(sampleClockCE),
 		.inMidiFrequencyIndex(midiFrequencyIndex),
 		.outSample(filterSample)
