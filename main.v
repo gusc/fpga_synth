@@ -88,12 +88,10 @@ module main(
 	assign DBG_LED = dbgData;
 	
 	// SAMPLE GENERATOR	
-	wire sampleClockCE; // Sampling Clock Enable flag
 	wire [11:0] filterSample;
 	SampleGenerator sampleGen(
 		.inCLK(clk_44100),
 		.inWaveMode(waveMode),
-		.inSampleClockCE(sampleClockCE),
 		.inMidiFrequencyIndex(midiFrequencyIndex),
 		.outSample(filterSample)
 	);
@@ -103,7 +101,7 @@ module main(
 	ConvolutionFilter filter(
 		.inFilterType(filterType),
 		.inSample(filterSample),
-		.inSampleReady(sampleClockCE),
+		.inSampleReady(1),
 		.outSample(envelopeSample)
 	);
 	
@@ -111,7 +109,7 @@ module main(
 	wire [11:0] dacSample;
 	EnvelopeFollower envelope(
 		.inSample(envelopeSample),
-		.inSampleReady(sampleClockCE),
+		.inSampleReady(1),
 		.inIsPlaying(samplePlaying),
 		.inVelocity(sampleVelocity),
 		.outSample(dacSample)
