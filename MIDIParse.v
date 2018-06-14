@@ -27,7 +27,8 @@ module MIDIParse(
 		output outPlaying,
 		output [6:0] outEnvAttack,
 		output [6:0] outEnvRelease,
-		output [6:0] outFilterFreq
+		output [6:0] outFilterFreq,
+		output [1:0] outWaveSel
     );
 
 	reg[3:0] byteNumber = 0; // command, note, velocity, reserved steps to skip all other MIDI commands
@@ -41,6 +42,7 @@ module MIDIParse(
 	reg[6:0] envAttack = 0;
 	reg[6:0] envRelease = 0;
 	reg[6:0] filterFreq = 0;
+	reg[1:0] waveSelector = 0;
 	
 	always @(posedge midiReady) begin
 		case (byteNumber)
@@ -121,6 +123,13 @@ module MIDIParse(
 						// Filter frequency (brightness by MIDI standard)
 						filterFreq <= midiByte[6:0];
 					end
+					else if (controlNumber == 0) begin
+						// Bank select
+						// We take upper bits to split the range of
+						// the knob into 4 equal segments for 4 different
+						// waveforms
+						waveSelector <= ((midiByte[6:0] & 7'h60) >> 5);
+					end
 				end
 				
 				byteNumber <= 0; // Wait for next command
@@ -137,5 +146,6 @@ module MIDIParse(
 	assign outEnvAttack = envAttack;
 	assign outEnvRelease = envRelease;
 	assign outFilterFreq = filterFreq;
+	assign outWaveSel = waveSelector;
 
 endmodule
