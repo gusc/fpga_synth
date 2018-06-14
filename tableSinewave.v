@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 module tableSinewave(idx, sinewave);
 input [9:0] idx;
-output reg [11:0] sinewave;
+output reg [11:0] sinewave = 0;
 always @(idx) begin
 
 	// Samples: 1024

@@ -26,7 +26,7 @@ module tableFrequencyStep(idx, frequency_step);
 // FREQ_HZ - note frequency (may be multiplied by additional 1000 to preserve fractions)
 // SAMPLE_RATE_HZ - sampling rate frequency (may need to be multiplied by 1000 if FREQ_HZ was multiplied by 1000)
 input [6:0] idx;
-output reg [23:0] frequency_step;
+output reg [23:0] frequency_step = 0;
 always @(idx) begin
 
 	case (idx)

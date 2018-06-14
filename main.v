@@ -35,13 +35,6 @@ module main(
 		output DAC_CLR
     );
 	
-	// 44.1 KHZ OSCILLATOR
-	wire clk_44100;
-	Oscillator_44100 osc44100(
-		.CLK_50MHZ(CLK_50MHZ),
-		.CLK_44100HZ(clk_44100)
-	);	
-	
 	// MIDI INPUT
 	wire[7:0] midiByte;   			// 8-bit MIDI byte
 	wire midiReady;       			// MIDI byte successfully received
@@ -77,13 +70,23 @@ module main(
 		.outWaveSel(waveMode)
 	);
 	
+	// 44.1 KHZ OSCILLATOR
+	wire clk_44100;
+	Oscillator_44100 osc44100(
+		.CLK_50MHZ(CLK_50MHZ),
+		.CLK_44100HZ(clk_44100)
+	);	
+	
 	// SAMPLE GENERATOR	
 	wire [11:0] filterSample;
+	wire outSampleReady;
 	SampleGenerator sampleGen(
-		.inCLK(clk_44100),
+		.inCLK_50MHZ(CLK_50MHZ),
+		.inSAMPLE_CLK(clk_44100),
 		.inWaveMode(waveMode),
 		.inMidiFrequencyIndex(midiFrequencyIndex),
-		.outSample(filterSample)
+		.outSample(filterSample),
+		.outSampleReady(outSampleReady)
 	);
 	
 	// CONVOLUTIONAL FILTER
@@ -91,7 +94,7 @@ module main(
 	ConvolutionFilter filter(
 		.inFilterType(filterType),
 		.inSample(filterSample),
-		.inSampleReady(1),
+		.inSampleReady(outSampleReady),
 		.outSample(envelopeSample)
 	);
 	
@@ -99,7 +102,7 @@ module main(
 	wire [11:0] dacSample;
 	EnvelopeFollower envelope(
 		.inSample(envelopeSample),
-		.inSampleReady(1),
+		.inSampleReady(outSampleReady),
 		.inIsPlaying(samplePlaying),
 		.inVelocity(sampleVelocity),
 		.outSample(dacSample)
@@ -147,7 +150,7 @@ module main(
 	// DAC OUTPUT
 	reg reset = 0;
 	DAC out(
-		.IN_CLOCK(clk_44100),
+		.IN_CLOCK(CLK_50MHZ),
 		.IN_RESET(IN_RESET),
 		.IN_BITS(BITS),
 

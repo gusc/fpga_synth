@@ -20,10 +20,12 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module SampleGenerator(
-	inCLK,
+	inCLK_50MHZ,
+	inSAMPLE_CLK,
 	inWaveMode,
 	inMidiFrequencyIndex,	
-	outSample
+	outSample,
+	outSampleReady
 );
 	// SOURCES USED: 
 	// 1. http://zipcpu.com/dsp/2017/07/11/simplest-sinewave-generator.html
@@ -33,31 +35,52 @@ module SampleGenerator(
 	localparam M = 12; // Sample output bit width
 	
 	// === I/O ===
-	input inCLK;
+	input inCLK_50MHZ;
+	input inSAMPLE_CLK;
 	input [1:0] inWaveMode;
 	input [6:0] inMidiFrequencyIndex;
 	wire [M-1:0] sample_sinewave;
 	wire [N-1:0] freq_step;
 	wire [9:0] sampling_phase;
-	output reg [M-1:0] outSample;
+	output reg [M-1:0] outSample = 0;
+	output reg outSampleReady = 0;
 	
 	// === REGISTERS ===
 	reg [N-1:0] phase = 0;
+	reg sampleUpdated = 0;
 	
 	// === SAMPLER ===
-	always @(posedge inCLK) begin
-		// Perform phase update and sample output shift only when sampling is clock-enabled
-		phase <= phase + freq_step;
+	always @(posedge inCLK_50MHZ) begin
+		// Perform phase and sample update only when sample clock is high
+		// Also do the update only once per high period
+		if (inSAMPLE_CLK == 1 && sampleUpdated != 1) begin
+			phase <= phase + freq_step;
+			
+			// Switch on sample wave mode
+			case(inWaveMode)				
+				// 0 - Sinewave: signed 12 bit Sinewave lookup table from 10 phase bits (1024 unique sinewave samples)
+				0: outSample <= sample_sinewave;
+				// 1 - Squarewave: signed 12 bit positive and negative maximums
+				1: outSample <= (phase[N-1] ?  12'h801 : 12'h7ff); 
+				// default - Sinewave
+				default: outSample <= sample_sinewave;
+			endcase
+			
+			// Toggle on sample-update lock
+			sampleUpdated <= 1;
+			
+			// Toggle sample ready on
+			outSampleReady <= 1;
+		end
+		else begin
+			// While sample is not updated, keep sample-ready flag off
+			outSampleReady <= 0;
+		end
 		
-		// Switch on sample wave mode
-		case(inWaveMode)				
-			// 0 - Sinewave: signed 12 bit Sinewave lookup table from 10 phase bits (1024 unique sinewave samples)
-			0: outSample <= sample_sinewave;
-			// 1 - Squarewave: signed 12 bit positive and negative maximums
-			1: outSample <= (phase[N-1] ?  12'h801 : 12'h7ff); 
-			// default - Sinewave
-			default: outSample <= sample_sinewave;
-		endcase
+		// Release sample update lock once clk_44100 is low
+		if (inSAMPLE_CLK == 0) begin
+			sampleUpdated <= 0;
+		end
 	end
 	
 	// === ASSIGNMENTS ===
