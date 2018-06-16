@@ -28,6 +28,8 @@ module main(
 		input MIDI_IN,
 		// DEBUGGING OUTPUT
 		output [7:0] DBG_LED,
+		// SWITCHES FOR FILTER,
+		input [2:0] SW_FILTER,
 		// DAC
 		output SPI_MOSI,
 		output SPI_SCK,
@@ -56,8 +58,7 @@ module main(
 	// 0 - Sine-wave (default)
 	// 1 - Square-wave
 	wire[1:0] waveMode;
-	// TODO: implement MIDI parser for this selector
-	wire[2:0]filterType = 000;
+
 	MIDIParse parser(
 		.midiByte(midiByte),
 		.midiReady(midiReady),
@@ -92,7 +93,7 @@ module main(
 	// CONVOLUTIONAL FILTER
 	wire [11:0] envelopeSample;
 	ConvolutionFilter filter(
-		.inFilterType(filterType),
+		.inFilterType(SW_FILTER),
 		.inSample(filterSample),
 		.inSampleReady(outSampleReady),
 		.outSample(envelopeSample)
