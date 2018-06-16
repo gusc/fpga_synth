@@ -108,51 +108,12 @@ module main(
 		.outSample(dacSample)
 	);
 	
-	// for testing purposes slow clock generator
-	// creates clock which waits 0.1ms for a tick
-	reg SLOW_CLOCK = 0;
-	integer SLOW_CLOCK_COUNTER = 0;
-	
-	always @(posedge CLK_50MHZ) begin
-		if (SLOW_CLOCK_COUNTER == 2500000) begin //2500000
-			SLOW_CLOCK_COUNTER <= 0;
-			SLOW_CLOCK <= ~SLOW_CLOCK;
-		end else begin
-			SLOW_CLOCK_COUNTER <= SLOW_CLOCK_COUNTER + 1;
-		end
-	end
-
-	// for testing purposes slow sample generator
-	// data must be written in when DAC_CS is one
-	// IN_CLOCK can be an arbitrary clock it just represents speed
-	// at which data is written in dac
-	
-	// IN_RESET can always be 0
-	// it can be used to terminate current data transfer to dac
-	// when RESET is turned to 1, DAC_CS will instantly move to posedge
-	integer STEP = 100;
-	reg TREND = 0;
-	reg [11:0]BITS = 0;
-	always @(posedge DAC_CS) begin
-		if (TREND == 1) begin
-			BITS = BITS + STEP;
-		end else begin
-			BITS = BITS - STEP;
-		end
-		
-		if (TREND == 1 && BITS > 12'hFFF - STEP) begin
-			TREND = 0;
-		end else if (TREND == 0 && BITS < STEP) begin
-			TREND = 1;
-		end
-	end
-
 	// DAC OUTPUT
 	reg reset = 0;
 	DAC out(
 		.IN_CLOCK(CLK_50MHZ),
 		.IN_RESET(IN_RESET),
-		.IN_BITS(BITS),
+		.IN_BITS(dacSample),
 
 		.OUT_SPI_SCK(SPI_SCK),
 		.OUT_SPI_MOSI(SPI_MOSI),
@@ -163,8 +124,8 @@ module main(
 	assign IN_RESET = reset;
 	
 	// DEBUGGING
-	reg[7:0] dummy = 7'h7F;
+	//reg[7:0] dummy = 7'h7F;
 	// Do something useful
-	assign DBG_LED = dummy;
+	assign DBG_LED = envAttack;
 	
 endmodule
