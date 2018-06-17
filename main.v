@@ -29,7 +29,7 @@ module main(
 		// DEBUGGING OUTPUT
 		output [7:0] DBG_LED,
 		// SWITCHES FOR FILTER,
-		input [2:0] SW_FILTER,
+		input [3:0] SW_FILTER,
 		// DAC
 		output SPI_MOSI,
 		output SPI_SCK,
