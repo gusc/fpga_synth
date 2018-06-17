@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
+// Company: LU DF (DIP-m)
 // Engineer: Tomass Lacis
 // 
 // Create Date:    16:14:10 05/19/2018 
@@ -31,6 +31,7 @@ module SampleGenerator(
 	// 1. http://zipcpu.com/dsp/2017/07/11/simplest-sinewave-generator.html
 	
 	// === PARAMETERS ===
+	parameter USE_UNSIGNED_TABLES = 0; // Use unsigned versions of wavetables
 	localparam N = 24; // Phase bit width
 	localparam M = 12; // Sample output bit width
 	
@@ -40,7 +41,9 @@ module SampleGenerator(
 	input [1:0] inWaveMode;
 	input [6:0] inMidiFrequencyIndex;
 	wire [M-1:0] sample_sinewave;
+	wire [M-1:0] sample_squarewave;
 	wire [N-1:0] freq_step;
+	wire phase_top_bit;
 	wire [9:0] sampling_phase;
 	output reg [M-1:0] outSample = 0;
 	output reg outSampleReady = 0;
@@ -58,10 +61,10 @@ module SampleGenerator(
 			
 			// Switch on sample wave mode
 			case(inWaveMode)				
-				// 0 - Sinewave: signed 12 bit Sinewave lookup table from 10 phase bits (1024 unique sinewave samples)
+				// 0 - Sinewave: signed/unsigned 12 bit Sinewave lookup table from 10 phase bits (1024 unique sinewave samples)
 				0: outSample <= sample_sinewave;
-				// 1 - Squarewave: signed 12 bit positive and negative maximums
-				1: outSample <= (phase[N-1] ?  12'h801 : 12'h7ff); 
+				// 1 - Squarewave: signed/unsigned 12 bit maximums and minimums of sample values
+				1: outSample <= sample_squarewave; 
 				// default - Sinewave
 				default: outSample <= sample_sinewave;
 			endcase
@@ -84,6 +87,7 @@ module SampleGenerator(
 	end
 	
 	// === ASSIGNMENTS ===
+	assign phase_top_bit = phase[N-1];
 	assign sampling_phase = phase[N-1:N-10];
 	
 	// === TABLE MODULES ===
@@ -91,9 +95,21 @@ module SampleGenerator(
 		.idx(inMidiFrequencyIndex), 
 		.frequency_step(freq_step)
 	);
-	tableSinewave tableSinewaveInst(
+	
+	// Create signed or unsigned sinewave table
+	tableSinewave 
+	#(USE_UNSIGNED_TABLES)
+	tableSinewaveInst(
 		.idx(sampling_phase), 
 		.sinewave(sample_sinewave)
 	);
 	
+	// Create signed or unsigned squarewave
+	tableSquarewave
+	#(USE_UNSIGNED_TABLES)
+	tableSquarewaveInst(
+		.phaseTopBit(phase_top_bit),
+		.squarewave(sample_squarewave)
+	);
+
 endmodule

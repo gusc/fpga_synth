@@ -81,7 +81,12 @@ module main(
 	// SAMPLE GENERATOR	
 	wire [11:0] filterSample;
 	wire outSampleReady;
-	SampleGenerator sampleGen(
+
+	SampleGenerator 	
+	// Parameters:
+	// 1. USE_UNSIGNED_TABLES (0 - signed, 1 - unsigned)	
+	#(0)
+	sampleGen(
 		.inCLK_50MHZ(CLK_50MHZ),
 		.inSAMPLE_CLK(clk_44100),
 		.inWaveMode(waveMode),
