@@ -206,7 +206,7 @@ module ConvolutionFilter(
 				sampleSum = sampleSum + tempSample;
 			end
 			// Normalize samples, cause they may get bigger than actual 12 bit value
-			sampleSum = sampleSum / 128;
+			sampleSum = sampleSum / 64;
 			
 			IIRBuffer = IIRBuffer << 12;
 			IIRBuffer[11:0] = sampleSum;
@@ -251,7 +251,7 @@ module ConvolutionFilter(
 				sampleSum = sampleSum + tempSample;
 			end
 			// Normalize samples, cause they may get bigger than actual 12 bit value
-			sample = sampleSum / 128;
+			sample = sampleSum / 16;
 		end 
 		else if (inFilterType == 4'b0101) begin // Moving Average filter
 			for(i = 0; i < avgFilterSampleSpan; i = i + 1) begin

@@ -31,6 +31,7 @@ module EnvelopeFollower(
 	
 	// state of current output
 	reg [11:0] currentSample;
+	reg [11:0] velocity = 5;
 	
 	// what will be next sample if we are starting to play
 	wire [11:0] nextStartSample;
@@ -49,14 +50,14 @@ module EnvelopeFollower(
 	
 	AddOperation calcNextStartSample (
 		.lhs(currentSample), 
-		.rhs(inVelocity), 
+		.rhs(velocity), 
 		.result(nextStartSample), 
 		.overflow(nextStartOverflow)
 	);
 	
 	SubtractOperation calcNextEndSample (
 		.lhs(currentSample), 
-		.rhs(inVelocity), 
+		.rhs(velocity), 
 		.result(nextEndSample), 
 		.overflow(nextEndOverflow)
 	);
