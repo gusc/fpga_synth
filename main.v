@@ -71,13 +71,6 @@ module main(
 		.outWaveSel(waveMode)
 	);
 	
-	// 44.1 KHZ OSCILLATOR
-	wire clk_44100;
-	Oscillator_44100 osc44100(
-		.CLK_50MHZ(CLK_50MHZ),
-		.CLK_44100HZ(clk_44100)
-	);	
-	
 	// SAMPLE GENERATOR	
 	wire [11:0] filterSample;
 	wire outSampleReady;
@@ -88,7 +81,6 @@ module main(
 	#(0)
 	sampleGen(
 		.inCLK_50MHZ(CLK_50MHZ),
-		.inSAMPLE_CLK(clk_44100),
 		.inWaveMode(waveMode),
 		.inMidiFrequencyIndex(midiFrequencyIndex),
 		.outSample(filterSample),

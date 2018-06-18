@@ -21,7 +21,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 module SampleGenerator(
 	inCLK_50MHZ,
-	inSAMPLE_CLK,
 	inWaveMode,
 	inMidiFrequencyIndex,	
 	outSample,
@@ -34,10 +33,11 @@ module SampleGenerator(
 	parameter USE_UNSIGNED_TABLES = 0; // Use unsigned versions of wavetables
 	localparam N = 32; // Phase bit width
 	localparam M = 12; // Sample output bit width
+	// 50 MHz / 1250 => 40 000 Hz
+	localparam SMPL_CLK_DIV = 1250; // Division for 50 MHz clock, used to make sample clock
 	
 	// === I/O ===
 	input inCLK_50MHZ;
-	input inSAMPLE_CLK;
 	input [1:0] inWaveMode;
 	input [6:0] inMidiFrequencyIndex;
 	wire [M-1:0] sample_sinewave;
@@ -50,13 +50,19 @@ module SampleGenerator(
 	
 	// === REGISTERS ===
 	reg [N-1:0] phase = 0;
-	reg sampleUpdated = 0;
+	reg [15:0] sampleClockCounter = SMPL_CLK_DIV;
+	reg sampleClock = 0;
+	
+	// === SAMPLE CLOCKER ===
+	always @(posedge inCLK_50MHZ) begin
+		sampleClockCounter <= !sampleClockCounter ? (SMPL_CLK_DIV - 1) : (sampleClockCounter - 1);
+		sampleClock <= !sampleClockCounter; // Will be true when counter hits 0, otherwise false
+	end
 	
 	// === SAMPLER ===
 	always @(posedge inCLK_50MHZ) begin
 		// Perform phase and sample update only when sample clock is high
-		// Also do the update only once per high period
-		if (inSAMPLE_CLK == 1 && sampleUpdated != 1) begin
+		if (sampleClock) begin
 			phase <= phase + freq_step;
 			
 			// Switch on sample wave mode
@@ -69,20 +75,12 @@ module SampleGenerator(
 				default: outSample <= sample_sinewave;
 			endcase
 			
-			// Toggle on sample-update lock
-			sampleUpdated <= 1;
-			
 			// Toggle sample ready on
 			outSampleReady <= 1;
 		end
 		else begin
-			// While sample is not updated, keep sample-ready flag off
+			// While sample clock is low, keep sample-ready flag off
 			outSampleReady <= 0;
-		end
-		
-		// Release sample update lock once clk_44100 is low
-		if (inSAMPLE_CLK == 0) begin
-			sampleUpdated <= 0;
 		end
 	end
 	
