@@ -7,6 +7,8 @@ module DAC(
 	input IN_RESET,
 	// actual value for dac output
 	input [11:0]IN_BITS,
+	// when new bits are provided
+	input IN_SAMPLE_READY,
 	// dac clock
 	output OUT_SPI_SCK,
 	// dac output
@@ -29,6 +31,7 @@ reg SPI_SCK = 0;
 reg [31:0]BITS = 0;
 reg [4:0] STATE = 1;
 
+integer IS_SAMPLE_FINISHED = 1;
 // 8-bit don't care 
 // 4-bit command
 // 4-bit dac pin 
@@ -41,11 +44,15 @@ integer BASE_BITS = 32'b10000000001100110000000000000001;
 integer CURRENT_BIT = 32;
 
 always @(posedge IN_CLOCK) begin
+	if (IN_SAMPLE_READY == 1) begin
+		IS_SAMPLE_FINISHED = 0;
+	end
+	
 	if (IN_RESET == 1) begin
 		DAC_CS = 1;
 		DAC_CLR = 0;
 		STATE = 1;
-	end else begin
+	end else if (IS_SAMPLE_FINISHED == 0) begin
 		case (STATE)
 		1: begin
 			DAC_CS = 1;
@@ -86,6 +93,7 @@ always @(posedge IN_CLOCK) begin
 			DAC_CS = 1;
 			SPI_SCK = 1;
 			STATE = 1;
+			IS_SAMPLE_FINISHED = 1;
 		end
 		default: begin
 			DAC_CS = 1;

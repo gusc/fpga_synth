@@ -78,7 +78,7 @@ module main(
 	SampleGenerator 	
 	// Parameters:
 	// 1. USE_UNSIGNED_TABLES (0 - signed, 1 - unsigned)	
-	#(0)
+	#(1)
 	sampleGen(
 		.inCLK_50MHZ(CLK_50MHZ),
 		.inWaveMode(waveMode),
@@ -106,12 +106,12 @@ module main(
 		.outSample(dacSample)
 	);
 	
-	// DAC OUTPUT
 	reg reset = 0;
 	DAC out(
 		.IN_CLOCK(CLK_50MHZ),
 		.IN_RESET(IN_RESET),
 		.IN_BITS(dacSample),
+		.IN_SAMPLE_READY(outSampleReady),
 
 		.OUT_SPI_SCK(SPI_SCK),
 		.OUT_SPI_MOSI(SPI_MOSI),

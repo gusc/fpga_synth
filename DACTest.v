@@ -6,6 +6,7 @@ module DACTest;
 	reg IN_CLOCK;
 	reg IN_RESET;
 	reg [11:0]IN_BITS;
+	reg IN_SAMPLE_READY;
 	
 	// Outputs
 	wire OUT_SPI_MOSI;
@@ -19,6 +20,7 @@ module DACTest;
 		.IN_CLOCK(IN_CLOCK),
 		.IN_RESET(IN_RESET),
 		.IN_BITS(IN_BITS),
+		.IN_SAMPLE_READY(IN_SAMPLE_READY),
 
 		.OUT_SPI_SCK(OUT_SPI_SCK),
 		.OUT_SPI_MOSI(OUT_SPI_MOSI),
@@ -34,9 +36,14 @@ module DACTest;
 		IN_RESET = 0;
 		IN_CLOCK = 0;
 		IN_BITS = 4'b1111;
+		IN_SAMPLE_READY = 1;
 	end
       
-	always begin
+	always begin		
 		#5 IN_CLOCK = ~IN_CLOCK;
+		
+		if (IN_SAMPLE_READY == 1) begin
+			#5 IN_SAMPLE_READY = 0;
+		end
 	end
 endmodule
