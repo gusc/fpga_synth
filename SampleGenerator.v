@@ -32,7 +32,7 @@ module SampleGenerator(
 	
 	// === PARAMETERS ===
 	parameter USE_UNSIGNED_TABLES = 0; // Use unsigned versions of wavetables
-	localparam N = 24; // Phase bit width
+	localparam N = 32; // Phase bit width
 	localparam M = 12; // Sample output bit width
 	
 	// === I/O ===
